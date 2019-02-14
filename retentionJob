@@ -1,0 +1,48 @@
+global class RetentionJob implements Database.Batchable<sObject>{
+
+     global final string query;
+
+    global RetentionJob(){
+        query = 'Select Id, Name, Account_Case_Safe_ID__c, Aggregate_Planhat_Beats_30_Days__c, Average_Active_Minutes_30_dAYS__c, Sigma_Churn_Grade__c, Sigma_Churn_Score__c, Churn_Segment__c, CompaniesViewed_Per_User__c, CRM_Integration__c, distinctUsers__c, Download_Actions_30_Days__c, Download_Actions_Per_User__c, Planhat_Health_Score__c, Quick_Search_Avg_30_days__c, Quick_Searches_Per_User__c, Churn_Score_Change__c From Account WHERE Active_Client__c = \'Yes\' OR Active_Client__c = \'RK Customer\' OR Active_Client__c = \'Client\' ';          
+    } 
+
+    global Database.QueryLocator start(Database.BatchableContext BC){
+        return Database.getQueryLocator(query);
+    }
+
+    global void execute(Database.BatchableContext BC,List<sObject> scope) {
+        List<Retention__c> objs = new List< Retention__c >();
+
+        //Assuming the snapshots you want are of Account data
+        for(Sobject s : scope){
+            Account a = (Account) s;
+            objs.add(new Retention__c(
+                 //Populate your Custom Object with data from the Account
+                 Name = a.Name,
+                 Linked_Account__c = a.ID,
+                 Account_Case_Safe_ID__c = a.Account_Case_safe_ID__c,
+                 Aggregate_Planhat_Beats_30_Days__c = a.Aggregate_Planhat_Beats_30_Days__c,
+                 Average_Active_Minutes__c = a.Average_Active_Minutes_30_dAYS__c,
+                 Churn_Grade__c = a.Sigma_Churn_Grade__c,
+                 Churn_Score__c = a.Sigma_Churn_Score__c,
+                 Churn_Segment__c = a.Churn_Segment__c,
+                 CompaniesViewed_Per_User__c = a.CompaniesViewed_Per_User__c,
+                 CRM_Integration__c = a.CRM_Integration__c,
+                 distinctUsers__c = a.distinctUsers__c,
+                 Download_Actions_30_Days__c = a.Download_Actions_30_Days__c,
+                 Download_Actions_Per_User__c = a.Download_Actions_Per_User__c,
+                 Planhat_Health_Score__c = a.Planhat_Health_Score__c,
+                 Quick_Search_Average_30_Days__c = a.Quick_Search_Avg_30_days__c,
+                 Quick_Searches_Per_User__c = a.Quick_Searches_Per_User__c,
+                 Churn_Score_Change__c = a.Churn_Score_Change__c,
+                 Retention_Year__c = 'a7f1M000000TP62'
+            ));
+        } 
+        insert objs;
+   }
+
+   global void finish(Database.BatchableContext BC) {
+        System.debug(LoggingLevel.WARN,'Batch Job is Complete!!!!!');
+   }
+
+}

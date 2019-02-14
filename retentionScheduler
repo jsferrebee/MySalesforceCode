@@ -1,0 +1,10 @@
+
+global class scheduleRetentionJob implements Schedulable {
+
+   global void execute(SchedulableContext ctx) {
+      RetentionJob r = new RetentionJob();
+        database.executeBatch(r);
+   }   
+}
+
+

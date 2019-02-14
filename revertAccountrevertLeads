@@ -1,0 +1,30 @@
+trigger noLongerClient on Account (before update) {
+
+List<ID> leadIds = New List<ID>();
+
+for(Account a : trigger.new){
+
+if(a.Current_Client__c == False){
+
+leadIDs.add(a.ID);
+
+}
+
+}
+
+List<Lead> leadList = [SELECT Id, Matched_Account__c, Client__c, IsConverted FROM Lead WHERE IsConverted=false AND Client__c = True AND Matched_Account__c in :leadIds];
+List<Contact> contactList = [SELECT Id, Client__c, AccountId FROM Contact where Client__c = True AND AccountId in :leadIds];
+
+for(integer i = 0; i < leadList.size(); i++){
+leadList[i].Client__c = False;
+}
+
+for(integer i = 0; i < contactList.size(); i++){
+contactList[i].Client__c = False;
+}
+
+update contactList;
+
+update leadList;
+
+}

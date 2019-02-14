@@ -1,0 +1,23 @@
+trigger relevantOppAlerts on DSCORGPKG__OppAlert__c (before insert) {
+
+List<ID> AccIDs = New List<ID>();
+
+for(DSCORGPKG__OppAlert__c o : trigger.new){
+
+if((o.DSCORGPKG__Contributory_Topics__c == 'Sales Leads'  || o.DSCORGPKG__Contributory_Topics__c == 'Sales Force Automation (SFA)' ||  o.DSCORGPKG__Contributory_Topics__c == 'DiscoverOrg')  && o.DSCORGPKG__Account__c != null){
+    AccIDs.add(o.DSCORGPKG__Account__c);
+    }
+    
+  }
+  
+  
+  List<Account> accList = [SELECT id, OppAlert_Fit__c, Relevant_OppAlert_Date__c FROM Account WHERE id in :AccIDs];
+      for(integer i = 0; i < accList.size(); i++){
+          accList[i].OppAlert_Fit__c = 'Yes';
+          accList[i].Relevant_OppAlert_Date__c = system.today();
+          }
+          
+update AccList;
+ 
+
+}

@@ -1,0 +1,46 @@
+@isTest
+        private class TestleadTemp{
+           static testmethod void  testschedule(){
+           Test.StartTest();
+        // load custom setting
+        DiscoverCommon.LoadSetting();
+        
+        //insert test data
+        
+        Account acct = new Account (Name = 'Acme, Inc.');
+        insert acct;
+        
+        Contact con = new Contact(
+                        FirstName = 'Scott',
+                        LastName = 'Test',
+                        AccountId = acct.Id
+                        );
+         insert con;
+         
+         Campaign camp = new Campaign(
+                         Name = 'Test',
+                         IsActive = TRUE,
+                         Type = 'Blog'
+                         );
+         
+         insert camp;
+         
+         CampaignMember member = new CampaignMember(
+                         ContactID = con.Id,
+                         Status = 'Completed',
+                         CampaignId = camp.Id,
+                         Lead_Temp_On_Create__c = NULL,
+                         Lead_Temp_On_Update__c = 'Warm'
+                         );
+         insert member;
+           
+           
+         scheduleleadTemp sh1 = new scheduleleadTemp();      
+         String sch = '0  00 1 3 * ?';
+           system.schedule('Test', sch, sh1);
+          
+        Test.stopTest();
+     }
+     
+      
+    }

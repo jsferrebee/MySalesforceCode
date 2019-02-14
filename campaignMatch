@@ -1,0 +1,42 @@
+// original trigger name is RKCampaign
+
+trigger RKCampaign_Lead on Lead (after insert) {
+
+List <Campaign> Campaigns = new List <Campaign> ();
+List <Lead> TagLeads = new List <Lead> ();
+List <Campaignmember> CMsToInsert = new List <Campaignmember> ();
+Map <String, Id> LtoCMap = new Map <String, Id> ();
+    
+// get ids of all associated leads that do not have null RK_Tag__c values
+for(Lead l : Trigger.new) {
+if(l.RK_Tag__c != null) {
+TagLeads.add(l);
+}
+}
+    
+// get all campaign ids and names
+Campaigns = ([SELECT Id, name FROM Campaign]);
+    
+// initialize map between campaign names and ids, using the campaign name as the key
+for(Campaign camp : Campaigns) {
+LtoCMap.put(camp.name, camp.id);
+system.Debug('Campaign name inside Map initialization: ' + camp.name + ' and ID = ' + camp.id);
+}
+    
+// Loops through all leads being inserted to see if the RK_Tag__c field matches the name of a campaign in the map.
+// If there is a match, a campaign member is created with the id of the lead and campaign id of the associated campaign.
+// Map is used here instead of nested for loops or an SOQL statement inside the for loop
+for(lead tl : TagLeads) {
+if(LtoCMap.containsKey(tl.RK_Tag__c)) {
+Campaignmember cm = new Campaignmember();
+cm.campaignid = LtoCMap.get(tl.RK_Tag__c);
+cm.leadid = tl.Id;
+CMsToInsert.add(cm);
+}
+}
+
+if(CMsToInsert.IsEmpty() == false) {
+system.debug('Inserting campaign members with Campaign id = ' + CMsToInsert[0].campaignid);
+insert CMsToInsert; 
+}
+}

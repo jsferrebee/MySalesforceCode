@@ -1,0 +1,7 @@
+global class scheduleleadTemp implements Schedulable {
+
+   global void execute(SchedulableContext ctx) {
+      leadTemp l = new leadTemp();
+        database.executeBatch(l);
+   }   
+}

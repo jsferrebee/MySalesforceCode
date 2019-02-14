@@ -1,0 +1,36 @@
+trigger Sic_Code_Lookup on Account (before update, before insert) {
+   
+    Set<String> sicCodes = new Set<String>();
+   
+    for(Account A : Trigger.new){
+    	if(A.Sic != null) {
+        	sicCodes.add(A.Sic);
+    	}
+	}
+ 
+	// Now we have a set of sic codes we want to verify, time to look them up
+	// I plan to build a map of the "sic code" on Account to "sic code" on custom object
+   
+    Map<String, SIC_Codes__c> validSics = new Map<String, SIC_Codes__c>();
+   
+    for(SIC_Codes__c obj: [SELECT ID, Name, Industry__c FROM SIC_Codes__C WHERE Name IN :sicCodes]){
+    	validSics.put(obj.Name, obj);
+	}
+ 
+// We have all the reference data we need, last loop on each Account
+ 
+	for(Account A : trigger.new){
+       
+        if(A.Sic != null){
+           
+            if(validSics.containsKey(A.Sic)){
+            	A.Industry = validSics.get(A.sic).Industry__c;
+        	}else{
+            	A.Industry = 'UNKNOWN SIC CODE';
+        	}
+    	}else{
+        	A.Industry = 'SIC CODE IS EMPTY';
+    	}
+	}   
+    
+}

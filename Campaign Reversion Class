@@ -1,0 +1,36 @@
+global class accountCampaignRevert implements Database.Batchable<sObject>{
+
+global final string query;
+
+global accountCampaignRevert(){
+
+query = 'Select Id, Campaign__c, Relevant_OppAlert_Date__c FROM Account WHERE Campaign__c = \'Interested\' AND Relevant_OppAlert_Date__c != LAST_N_DAYS:7';
+
+}
+
+global Database.QueryLocator start(Database.BatchableContext BC){
+
+return Database.getQueryLocator(query);
+
+}
+
+global void execute(Database.BatchableContext BC, List<sObject> scope){
+
+    List<Account> updateObjs = new List<Account>();
+    
+    for(Sobject a : scope) {
+    Account obj = (Account) a;
+    obj.Campaign__c = 'ICP';
+    updateObjs.add(obj);
+    
+}
+
+update updateObjs;
+
+}
+
+global void finish(Database.BatchableContext BC) {
+    system.debug('Batch Account revert is complete');
+    
+}
+}

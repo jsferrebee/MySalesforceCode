@@ -1,0 +1,7 @@
+global class scheduleRevert implements Schedulable {
+
+   global void execute(SchedulableContext ctx) {
+      accountCampaignRevert p = new accountCampaignRevert();
+        database.executeBatch(p);
+   }   
+}

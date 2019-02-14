@@ -1,0 +1,28 @@
+global class leadTemp implements Database.Batchable<sObject>{
+
+    global final string query;
+
+    global leadTemp(){
+        query = 'Select Id, Lead_Temp_On_Create__c, Lead_Temp_On_Update__c, Campaign.Type From CampaignMember WHERE Lead_Temp_On_Create__c=NULL AND Lead_Temp_On_Update__c !=NULL AND (Campaign.Type!=\'SEM - Text\' OR Campaign.Type!=\'Website\')';        
+    } 
+    
+    global Database.QueryLocator start(Database.BatchableContext BC){
+
+        return Database.getQueryLocator(query);
+    }
+    
+    global void execute(Database.BatchableContext BC,List<sObject> scope) {
+              List<CampaignMember> updateObjs = new List<CampaignMember>();
+        
+              for(Sobject s : scope) {
+                CampaignMember obj = (CampaignMember) s;
+                obj.Lead_Temp_On_Create__c = obj.Lead_Temp_On_Update__c;
+                updateObjs.add(obj);
+              }  
+              update updateObjs;
+    }
+    
+    global void finish(Database.BatchableContext BC) {
+              system.debug('Batch Job for Lead Temp is complete');
+    }   
+}

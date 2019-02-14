@@ -1,0 +1,28 @@
+global class preDemoSurveyMontoThurs implements Database.Batchable<sObject>{
+
+    global final string query;
+
+    global preDemoSurveyMontoThurs(){
+        query = 'Select Id, Start_Date_Contact_Latest_for_autom__c, Event_Result_Field_Latest__c, Demo_day_of_the_Week__c, Event_Type_Contact_First_Demo__c, Last_Pre_Demo_Survey_Taken__c From Contact WHERE Start_Date_Contact_Latest_for_autom__c = TOMORROW AND Last_Pre_Demo_Survey_Taken__c != LAST_90_DAYS AND Event_Result_Field_Latest__c=\'Scheduled\' AND (Event_Type_Contact_First_Demo__c=\'wBDR Sales Appointment 1\' OR Event_Type_Contact_First_Demo__c=\'BDR Sales Appointment 1\' OR Event_Type_Contact_First_Demo__c=\'IST Sales Appointment 1\') ';        
+    } 
+    
+    global Database.QueryLocator start(Database.BatchableContext BC){
+
+        return Database.getQueryLocator(query);
+    }
+    
+    global void execute(Database.BatchableContext BC,List<sObject> scope) {
+              List<Contact> updateObjs = new List<Contact>();
+        
+              for(Sobject s : scope) {
+                Contact obj = (Contact) s;
+                obj.Outreach_Sequence__c = 'Pre Demo Survey';
+                updateObjs.add(obj);
+              }  
+              update updateObjs;
+    }
+    
+    global void finish(Database.BatchableContext BC) {
+              system.debug('Batch Job for pre demo survey is complete');
+    }   
+}

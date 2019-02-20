@@ -1,0 +1,22 @@
+@isTest
+public class noLongerClientTestClass {
+
+    @isTest
+    Static void testnoLongerClient(){
+        
+        Account a = new Account (Name = 'TestAccount', Current_Client__c = True);
+        insert a;
+        
+        Contact c = new Contact (LastName = 'Test', FirstName = 'Test', Client__c = True, AccountId = a.ID );
+        insert c;
+        
+        Lead l = new Lead (LastName = 'Test', Company = 'Test', Client__c = True, Matched_Account__c = a.ID);
+        insert l;
+        
+        a.Current_Client__c = False;
+        update a;
+        
+        }
+        
+        
+        }

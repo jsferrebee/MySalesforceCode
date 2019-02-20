@@ -1,0 +1,22 @@
+@isTest
+public class currentClientTestClass {
+
+    @isTest
+    Static void testCurrentClient(){
+        
+        Account a = new Account (Name = 'TestAccount', Current_Client__c = False);
+        insert a;
+        
+        Contact c = new Contact (LastName = 'Test', FirstName = 'Test', Client__c = False, AccountId = a.ID );
+        insert c;
+        
+        Lead l = new Lead (LastName = 'Test', Company = 'Test', Client__c = False, Matched_Account__c = a.ID);
+        insert l;
+        
+        a.Current_Client__c = True;
+        update a;
+        
+        }
+        
+        
+        }

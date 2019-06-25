@@ -1,0 +1,26 @@
+@isTest
+public class deleteRecordsTest {
+    
+    static testMethod void TestInsert(){
+    
+        Lead a = new Lead();
+        a.LastName = 'Test';
+        a.Company = 'Test';
+        a.LeadSource = 'Test';
+        a.email='test@test.com';
+        insert a;
+        
+        Ownership_History__c oh = new Ownership_History__c();
+        oh.name = 'test';
+        oh.Lead__c = a.id;
+        insert oh;
+        
+        try{
+        
+        delete a;
+        }
+        catch(Exception ee)
+        {}
+        
+    }
+}

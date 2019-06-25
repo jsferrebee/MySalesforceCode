@@ -1,0 +1,54 @@
+public class LeadProcessor {
+    public static boolean hasProcessed = false;
+    
+    public static void processLeads(List<Lead> leadList) {
+        if (!hasProcessed) {
+            hasProcessed = true;
+            LeadCampaignTrigger__c setting = LeadCampaignTrigger__c.getInstance();
+            
+            Set<Id> leadToAdd = new Set<Id>();
+            
+            for (Lead l : leadList) {
+                if ((l.Company_Source__c == 'Vimeo OTT' || l.Company_Source__c == 'Vimeo Enterprise') &&
+                    (l.Status == 'Email Out' || l.Status == 'In Discussion' || l.Status == 'Qualified - Opp Created')) {
+                    leadToAdd.add(l.id);
+                }
+                
+            }
+            
+            if (leadToAdd.size() > 0) {
+                for (CampaignMember cm : [SELECT id, leadId FROM CampaignMember WHERE campaignId = :setting.Campaign_ID__c AND leadId in :leadToAdd]) {
+                    leadToAdd.remove(cm.leadId);
+                }
+                
+                List<CampaignMember> newList = new List<CampaignMember>();
+                
+                for (Id leadId : leadToAdd) {
+                    newList.add(new CampaignMember(campaignId = setting.Campaign_Id__c, leadId = leadId, Status = 'Sent'));
+                }
+                
+                database.insert(newList, false);
+            }
+        }
+    }
+    
+    public static void deleteRecords(List<Lead> leadList) {    
+    
+    
+       List <Id> relatedIds = new List<Id>();
+
+    for(Lead l: leadList){
+    relatedIds.add(l.id);
+    }
+    
+    List<Ownership_History__c> relatedRecords = [select ID, Lead__c from Ownership_History__c where Lead__c IN:relatedIds];
+
+    if(relatedRecords.size() > 0){
+    Delete relatedRecords;
+    }
+    
+    
+    }
+    
+    
+}

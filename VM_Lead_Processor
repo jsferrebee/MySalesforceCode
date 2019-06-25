@@ -32,6 +32,8 @@ public class LeadProcessor {
         }
     }
     
+    //added by SF to handle Delete actions
+    
     public static void deleteRecords(List<Lead> leadList) {    
     
     

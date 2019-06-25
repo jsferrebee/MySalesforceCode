@@ -1,0 +1,26 @@
+trigger transferHistory on Lead (after update) {
+
+    for (lead l : trigger.new) {
+    
+    
+        //how do I only fire if the Lead is Converted AND if there are related Ownership History records?
+        if(l.isconverted) {
+
+            Set<Id> leadIds = new Set<Id>();
+            leadIds.add(l.id);
+
+            List<Ownership_History__c> ownershipHistory = [select Lead__c, Opportunity__c from Ownership_History__c where Lead__c in :leadIds];
+
+                For(Ownership_History__c updateRecords : ownershipHistory){
+                updateRecords.Opportunity__c = Trigger.new[0].ConvertedOpportunityId;
+            
+                update updateRecords;
+            
+                }
+
+
+}
+
+}
+
+}

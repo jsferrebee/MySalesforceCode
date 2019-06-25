@@ -3,7 +3,8 @@ trigger LeadTrigger on Lead (after insert, after update, before delete) {
     if ((Trigger.isInsert || Trigger.isUpdate) && Trigger.isAfter) {
         LeadProcessor.processLeads(Trigger.New);
     }
-    
+   
+   //added by SF here to handle Delete actions
     if (Trigger.IsBefore && Trigger.isDelete){
         //leadDelete.deleteRecords(Trigger.Old);
         LeadProcessor.deleteRecords(Trigger.Old);

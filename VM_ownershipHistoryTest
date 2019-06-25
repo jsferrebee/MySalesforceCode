@@ -1,0 +1,21 @@
+@isTest
+public class ownershipHistoryTest {
+    
+    static testMethod void TestUpdate(){
+    
+        Lead a = new Lead();
+        a.LastName = 'Test';
+        a.Company = 'Test';
+        a.LeadSource = 'Test';
+        a.email='test@test.com';
+        a.ownerid = '0050y00000COElyAAH';
+        insert a;
+        
+        
+        a.ownerid = '0050y00000ByzdmAAB';
+        update a;
+        
+
+        
+    }
+}

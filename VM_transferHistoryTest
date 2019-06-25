@@ -1,0 +1,40 @@
+@isTest
+public class transferHistoryTest {
+    
+    static testMethod void TestConvert(){
+    
+        Lead a = new Lead();
+        a.LastName = 'Test';
+        a.Company = 'Test';
+        a.LeadSource = 'Test';
+        a.email='test@test.com';
+        a.ownerid = '0050y00000COElyAAH';
+        
+        //required fields for a Lead to be converted
+        
+        a.SecondaryLeadSource__c = 'Blog';
+        a.Status = 'Open';
+        a.Authority_ANUM__c = 'Test';
+        a.Need_ANUM__c = 'Test';
+        a.Timeline2__c = 'ASAP';
+        a.Project_Type__c = 'OTT';
+        insert a;
+        
+        
+        //update the owner to create Ownership History
+        
+        a.ownerid = '0050y00000ByzdmAAB';
+        update a;
+        
+        //convert the Lead
+        
+        Database.LeadConvert lc = new database.LeadConvert();
+        lc.setLeadId(a.id);
+        lc.SetDoNotCreateOpportunity(false);
+        lc.setConvertedStatus('Converted to Opportunity');
+        
+        Database.LeadConvertResult lcr = Database.convertLead(lc);
+        System.assert(lcr.isSuccess());
+        
+    }
+}

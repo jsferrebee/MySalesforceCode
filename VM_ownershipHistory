@@ -1,0 +1,32 @@
+trigger ownershipHistory on Lead (after update) {
+
+ for (Lead l: Trigger.new) {
+        Lead oldLead = Trigger.oldMap.get(l.ID);
+        if (l.ownerid != oldLead.ownerid &&
+            l.ownerid != '00G0y000002kj0y' &&
+            l.ownerid != '00G0y000002knWZ' &&
+            l.ownerid != '00G0y000002kmvt' &&
+            l.ownerid != '00G0y000002kj2Q' &&
+            l.ownerid != '00G0y000002kj0t' &&
+            l.ownerid != '00G0y000002kj6D' &&
+            l.ownerid != '00G0y000002kj2a' &&
+            l.ownerid != '00G0y000002kj0U' &&
+            l.ownerid != '00GC0000002juUH' &&
+            l.ownerid != '00GC0000002OyGH' &&
+            l.ownerid != '00GC0000002OyFn' &&
+            l.ownerid != '00G0y000002kmSS') {
+        
+            Ownership_History__c oh = new Ownership_History__c();
+            oh.AE_Team__c = l.AE_Team__c;
+            oh.Date_Passed_to_AE__c = l.Date_Passed_to_AEs__c;
+            oh.Lead__c = l.id;
+            oh.name = 'LeadOwnershipChange';
+            oh.New_Owner__c = l.ownerid;
+            //oh.Old_Owner__c = oldLead.ownerid;
+            oh.SDR_Owner__c = l.SDR_Owner__c;
+            
+            insert oh;           
+
+}
+}
+}

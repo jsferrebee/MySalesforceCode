@@ -1,0 +1,63 @@
+public class leadTriggerHandler {
+    public static void processLeads(List < Lead > leadList, map < id, Lead > oldLead) {
+     
+    Set<string> leadWebsites = new Set<string>();     
+    
+    for(Lead l : leadList) {
+    
+    leadWebsites.add(l.website);   
+    
+    }
+    
+    List<Account> leadAccountIds = [SELECT Id, OwnerId, ParentId, Website FROM Account WHERE Website IN: leadWebsites];
+    
+    //List<Account> parentAccountIds = [SELECT Id, OwnerID, ParentID, Website FROM Account WHERE ParentID IN :leadAccountIds];
+    
+    Set<ID> parentAccountIds = new Set<Id>();
+    
+    for(Account a :leadAccountIds) {
+    parentAccountIds.add(a.ParentId);
+    }
+    
+    System.Debug('Parent Account is ' +parentAccountIds);
+    
+    Map<String, Account> accountsByWebsite = new Map<String, Account>();
+    
+    If(parentAccountIds.size() > 0) {
+    
+    For (Account a: leadAccountIds) {
+        accountsByWebsite.put(a.website, a);
+    }
+    
+    For (Lead newLead : leadList) {
+        if(accountsByWebsite.containsKey(newLead.website)) {
+            newLead.ownerId = accountsByWebsite.get(newLead.website).ownerid;
+                }
+    
+          }
+          
+      }
+      
+    Else if(leadAccountIds.size() > 0) {
+    
+    For (Account a: leadAccountIds) {
+        accountsByWebsite.put(a.website, a);
+    }
+    
+    For (Lead newLead : leadList) {
+        if(accountsByWebsite.containsKey(newLead.website)) {
+            newLead.ownerId = accountsByWebsite.get(newLead.website).ownerid;
+                }
+                
+        else if(newLead.State == 'California') {
+            newLead.OwnerId = '2F00550000007oUE';
+            }
+        else (newLead.OwnerId = '2F00550000005ukke');        
+    
+          }       
+          
+    }
+
+  }
+
+}

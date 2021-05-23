@@ -1,0 +1,66 @@
+/*
+@description:  The purpose of this job is to set the Primary Campaign field on Open Opportunities to the 
+    most recently associated Campaign via Campaign Member after the Opportunity is created
+@see: Batch_PrimaryCampaignTest for Test Class
+@author:  sferrebee
+**/
+
+global with sharing class Batch_PrimaryCampaign implements Database.Batchable<sObject>, schedulable {  
+      
+    global Database.QueryLocator start(Database.BatchableContext BC) {
+        
+        // Query all Open Opportunities that do not have a Primary Campaign and do have a Meeting Contact
+        
+        //String query = 'SELECT Id, CampaignId, AccountId, Meeting_Contact__c FROM Opportunity WHERE CampaignId = null AND Meeting_Contact__c != null AND IsClosed = false';
+        String query = 'SELECT Id, CampaignId, AccountId, Meeting_Contact__c FROM Opportunity WHERE CampaignId = null AND Meeting_Contact__c != null';
+        return Database.getQueryLocator(query);
+    }
+
+    global void execute(Database.BatchableContext BC, List<Opportunity> listOpps) {
+
+        Set <Id> meetingContactIDs = new Set <Id>();
+
+        List<Opportunity> oppsToUpdate = new List<Opportunity>();
+        // Put Meeting Contact IDs in a set to get their Campaign Members
+        For (Opportunity opp : listOpps){
+            if(opp.Meeting_Contact__c != null){
+                meetingContactIds.add(opp.Meeting_Contact__c);
+            }
+        }
+
+        // With the Meeting Contact Ids, get a map of Contact Id to Campaign Id
+
+        Map<Id, Id> contactToCampaignID = new Map<Id,Id>();
+
+        if(!meetingContactIDs.isEmpty()){
+
+            List<CampaignMember> campaignMembers = [Select Id, ContactId, CampaignId From CampaignMember Where ContactID In :meetingContactIds Order By Member_First_Associated_Date__c ASC ];
+
+            For (CampaignMember cm : campaignMembers){
+                contactToCampaignID.put(cm.ContactId, cm.CampaignId);
+            }
+        }   
+        // Set the Campaign ID on the Opportunity
+        if(!contactToCampaignId.isEmpty()){
+            For (Opportunity opp : listOpps){
+                if(opp.CampaignID == null && contactToCampaignId.get(opp.Meeting_Contact__c) != null){
+                    opp.CampaignId = contactToCampaignID.get(opp.Meeting_Contact__c);
+                    oppsToUpdate.add(opp);
+                }
+            }
+        }
+
+        if(!oppsToUpdate.isEmpty()){
+            update oppsToUpdate;
+        }
+ }
+
+    global void finish(Database.BatchableContext BC) {
+        
+    }
+    global void execute(SchedulableContext sc) {
+        Batch_PrimaryCampaign b = new Batch_PrimaryCampaign ();
+        database.executebatch(b);
+    }
+    
+}

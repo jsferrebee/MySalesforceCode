@@ -1,0 +1,132 @@
+/*
+@description:  The purpose of this job is to check Contact's against Campaigns.  If the Contact is related to the Campaign
+                but not a Campaign Member, then create a Campaign Member from the Contact
+@see: Batch_ContactToCampaignTest for Test Class
+@author:  sferrebee
+**/
+
+global with sharing class Batch_ContactToCampaignMember implements Database.Batchable<sObject>, schedulable {  
+      
+    global Database.QueryLocator start(Database.BatchableContext BC) {
+
+        // Get all Contacts related to a Campaign that have been recently updated
+
+        String query = 'SELECT Id, Last_Call_to_Action_Details__c, FirstName, LastName, Title, AccountId FROM Contact WHERE Last_Call_to_Action_Details__c != null and LastModifiedDate = TODAY';
+        System.debug('The Query is ' +query);
+        return Database.getQueryLocator(query);
+    }
+
+    global void execute(Database.BatchableContext BC, List<Contact> listContacts) {
+
+        Set<String> campaignNames = new Set<String>();
+        
+        for(Contact con : listContacts) {
+            // Put the Campaign Name in the Set of Strings
+            campaignNames.add(con.Last_Call_to_Action_Details__c);
+        }	
+        System.debug('The Campaign Names are ' +campaignNames); 
+        
+        // Get all related Campaigns
+        List<Campaign> relatedCampaigns = new List<Campaign>();
+
+        relatedCampaigns = [Select Id, Name From Campaign Where Name IN :campaignNames];
+
+        System.debug('The related Campaigns are ' +relatedCampaigns);
+
+        Set<ID> campaignIDs = new Set<Id>();
+
+        For(Campaign cm: relatedCampaigns){
+            campaignIds.add(cm.Id);
+        }
+
+        List<CampaignMember> campaignMembers = new List<CampaignMember>();
+
+        campaignMembers = [Select Id, ContactId, CampaignId FROM CampaignMember Where CampaignId IN :campaignIds];
+        System.debug('The campaign members are ' +campaignMembers);
+        // Get all related Campaign Members and put in a map
+
+        Map<Id, Set<Id>> campaignToCMConId = new Map<Id, Set<Id>>();
+        
+        For(CampaignMember cm : campaignMembers){
+
+            // If the Campaign is already in the map, then add the Campaign Member to the list
+            if(campaignToCMConId.keyset().contains(cm.CampaignID)){
+
+                Set<Id> currentCMConIds = campaignToCMConId.get(cm.CampaignId);
+                currentCMConIds.add(cm.ContactId);
+                campaignToCMConId.put(cm.CampaignId, currentCMConIds);
+                System.debug('Campaign to CM in for loop is ' +campaignToCMConId);
+            } else {
+            // If the Campaign is not already in the map, then add the Campaign and Campaign Member
+                Set<Id> cmConIdsToAdd = new Set<Id>();
+                cmConIdsToAdd.add(cm.ContactId);
+                campaignToCMConId.put(cm.CampaignId, cmConIdsToAdd);
+
+                System.debug('Campaign to CM in else statement is ' +campaignToCMConId);
+            }
+
+        }
+        System.debug('Campaign To CM is ' +campaignToCMConId);
+        // Now we have a map of Campaign ID to Campaign Members
+        // I have the List of Contacts, put in a map
+        Map<String, List<Contact>> campaignToContact = new Map<String, List<Contact>>();
+        
+        For(Contact c : listContacts){
+            if(campaignToContact.keyset().contains(c.Last_Call_to_Action_Details__c)){
+                List<Contact> currentContacts = campaignToContact.get(c.Last_Call_to_Action_Details__c);
+                currentContacts.add(c);
+                campaignToContact.put(c.Last_Call_to_Action_Details__c, currentContacts);
+                System.debug('campaign to contact in if statement is ' +campaignToContact);
+            } else {
+                // Otherwise add the String and the Contact
+                List<Contact> contactsToAdd = new List<Contact>();
+                contactsToAdd.add(c);
+                campaignToContact.put(c.Last_Call_to_Action_Details__c, contactsToAdd);
+                System.debug('campaign to contact in else statement is ' +campaignToContact);
+            }
+        }
+        System.debug('campaign to contact is ' +campaignToContact);
+        // Go over the List of Campaigns
+        // For each Campaign get their List of Campaign Members and List of Contacts
+
+        List<CampaignMember> newCampaignMembers = new List<CampaignMember>();
+
+        For(Campaign camp : relatedCampaigns){
+            // Get their related Contacts
+            List<Contact> relatedContacts = campaignToContact.get(camp.Name);
+            System.debug('relatedContacts are ' +relatedContacts);
+            // Get their list of Campaign Members then iterate over
+            Set<Id> relatedCMIds = campaignToCMConId.get(camp.Id);
+            System.debug('related CMS are ' +relatedCMIds);
+            // Iterate over the Contacts and check if they're a CM, if not create one
+
+            For(Contact con: relatedContacts){
+                System.debug('The Contact is ' +json.serializepretty(con));
+                if(!relatedCMIds.contains(con.id)){    
+                    // If the Contact is not in the list, create a new Campaign Member from the Contact
+                    CampaignMember campMem = new CampaignMember();
+                    campMem.ContactId = con.id;
+                    campMem.CampaignId = camp.id;
+                    //campMem.FirstName = con.FirstName;
+                    //campMem.LastName = con.LastName;
+                    //campMem.Title = con.Title;
+                    system.debug('The new campaign member is ' +campMem);
+                    newCampaignMembers.add(campMem);
+                    System.debug('New Campaign Members are ' +newCampaignMembers);
+                }
+            }
+        }
+        if(!newCampaignMembers.IsEmpty()){
+            insert newCampaignMembers;
+        }        
+    }
+
+    global void finish(Database.BatchableContext BC) {
+        
+    }
+    global void execute(SchedulableContext sc) {
+        Batch_ContactToCampaignMember b = new Batch_ContactToCampaignMember ();
+        database.executebatch(b);
+    }
+    
+}
